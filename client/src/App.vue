@@ -123,11 +123,11 @@ onUnmounted(() => {
           <span class="nav-icon" aria-hidden="true">⌂</span>
           <span>Home</span>
         </RouterLink>
-        <RouterLink to="/bookings" class="nav-link" active-class="active">
+        <RouterLink to="/bookings-service" class="nav-link" active-class="active">
           <span class="nav-icon" aria-hidden="true">▣</span>
           <span>Service booking </span>
         </RouterLink>
-        <RouterLink to="/bookingsp" class="nav-link" active-class="active">
+        <RouterLink to="/bookings-product" class="nav-link" active-class="active">
           <span class="nav-icon" aria-hidden="true">▣</span>
           <span>Product booking</span>
         </RouterLink>        

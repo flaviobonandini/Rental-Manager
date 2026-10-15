@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { authFetch } from '../utils/authFetch'
 
 interface Rental {
@@ -27,7 +27,10 @@ const props = withDefaults(defineProps<{ product?: boolean }>(), {
 })
 const isProductBooking = computed(() => props.product)
 const rentals = ref<Rental[]>([])
+const route = useRoute()
 const router = useRouter()
+const notificationMessage = ref('')
+let notificationTimer: ReturnType<typeof setTimeout> | null = null
 const isAdministrator = computed(() => {
   try {
     const user = JSON.parse(localStorage.getItem('user') || 'null')
@@ -49,6 +52,23 @@ function errorMessage(value: unknown) {
   return value instanceof Error
     ? value.message
     : 'Error loading bookings'
+}
+
+function showNotification(message: string) {
+  notificationMessage.value = message
+  if (notificationTimer) clearTimeout(notificationTimer)
+  notificationTimer = setTimeout(() => {
+    notificationMessage.value = ''
+    notificationTimer = null
+  }, 3200)
+}
+
+function closeNotification() {
+  notificationMessage.value = ''
+  if (notificationTimer) {
+    clearTimeout(notificationTimer)
+    notificationTimer = null
+  }
 }
 
 async function loadRentals() {
@@ -211,7 +231,7 @@ async function duplicateRental(rental: Rental) {
   }
 
   await router.push({
-    path: isProductBooking.value ? '/bookingsp/new' : '/bookings/new',
+    path: isProductBooking.value ? '/bookings-product/new' : '/bookings-service/new',
     query: {
       [isProductBooking.value ? 'product_id' : 'service_id']: String(
         isProductBooking.value ? rental.product_id : rental.service_id,
@@ -222,11 +242,43 @@ async function duplicateRental(rental: Rental) {
   })
 }
 
-onMounted(loadRentals)
+onMounted(() => {
+  const saved = route.query.saved
+  if (saved === 'created' || saved === 'updated') {
+    const bookingType = isProductBooking.value ? 'Product booking' : 'Service booking'
+    showNotification(`${bookingType} ${saved} successfully.`)
+    void router.replace({ query: { ...route.query, saved: undefined } })
+  }
+  void loadRentals()
+})
+
+onUnmounted(() => {
+  if (notificationTimer) clearTimeout(notificationTimer)
+})
 </script>
 
 <template>
   <section class="bookings-page">
+    <Transition name="toast">
+      <div
+        v-if="notificationMessage"
+        class="notification-toast"
+        role="status"
+        aria-live="polite"
+      >
+        <span class="notification-icon" aria-hidden="true">✓</span>
+        <span>{{ notificationMessage }}</span>
+        <button
+          type="button"
+          class="notification-close"
+          aria-label="Close notification"
+          @click="closeNotification"
+        >
+          ×
+        </button>
+      </div>
+    </Transition>
+
     <header class="page-header">
       <div class="title-block">
         <h2>{{ isProductBooking ? 'Product bookings' : 'Service bookings' }}</h2>
@@ -240,7 +292,7 @@ onMounted(loadRentals)
         <button
           type="button"
           class="new-booking-button"
-          @click="router.push(isProductBooking ? '/bookingsp/new' : '/bookings/new')"
+          @click="router.push(isProductBooking ? '/bookings-product/new' : '/bookings-service/new')"
         >
           {{ isProductBooking ? '+ New Product Booking' : '+ New Booking' }}
         </button>
@@ -336,7 +388,7 @@ onMounted(loadRentals)
                 class="action-button view"
                 title="View"
                 aria-label="View booking"
-                @click="router.push(`${isProductBooking ? '/bookingsp' : '/bookings'}/view/${rental.id}`)"
+                @click="router.push(`${isProductBooking ? '/bookings-product' : '/bookings-service'}/view/${rental.id}`)"
               >
                 👁
               </button>
@@ -345,7 +397,7 @@ onMounted(loadRentals)
                 class="action-button edit"
                 title="Edit"
                 aria-label="Edit booking"
-                @click="router.push(`${isProductBooking ? '/bookingsp' : '/bookings'}/edit/${rental.id}`)"
+                @click="router.push(`${isProductBooking ? '/bookings-product' : '/bookings-service'}/edit/${rental.id}`)"
               >
                 ✏️
               </button>
@@ -440,6 +492,66 @@ onMounted(loadRentals)
 </template>
 
 <style scoped>
+.notification-toast {
+  position: fixed;
+  top: 22px;
+  right: 22px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(440px, calc(100vw - 32px));
+  padding: 13px 14px;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  background: #f0fdf4;
+  box-shadow: 0 12px 30px rgb(15 23 42 / 14%);
+  color: #166534;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.notification-icon {
+  display: inline-flex;
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #22c55e;
+  color: white;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.notification-close {
+  margin-left: 6px;
+  padding: 2px 6px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.notification-close:hover {
+  background: rgb(0 0 0 / 6%);
+}
+
+.toast-enter-active,
+.toast-leave-active {
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.toast-enter-from,
+.toast-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
 .bookings-page {
   min-height: calc(100vh - 68px);
   padding: 34px clamp(20px, 3vw, 42px);

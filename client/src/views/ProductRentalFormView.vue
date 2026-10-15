@@ -340,7 +340,10 @@ async function saveRental() {
     )
     const data = await readResponse(response)
     if (!response.ok) throw new Error(data.message || 'Unable to save the product booking.')
-    await router.push('/bookingsp')
+    await router.push({
+      path: '/bookings-product',
+      query: { saved: isNew.value ? 'created' : 'updated' },
+    })
   } catch (cause) {
     error.value = errorMessage(cause, 'Error while saving the product booking.')
   } finally {
@@ -359,7 +362,7 @@ onMounted(loadRental)
         <p v-if="isNew">The number is generated automatically in the format RTP-DDMMYY-XXXX</p>
         <p v-else>{{ rental.rental_number }}</p>
       </div>
-      <button type="button" class="secondary-button" @click="router.push('/bookingsp')">
+      <button type="button" class="secondary-button" @click="router.push('/bookings-product')">
         ← Back to product bookings
       </button>
     </header>
@@ -478,14 +481,14 @@ onMounted(loadRental)
       <p v-if="error" class="error-message" role="alert">{{ error }}</p>
 
       <footer class="form-actions">
-        <button type="button" class="secondary-button" @click="router.push('/bookingsp')">
+        <button type="button" class="secondary-button" @click="router.push('/bookings-product')">
           {{ isView ? 'Close' : 'Cancel' }}
         </button>
         <button
           v-if="isView"
           type="button"
           class="primary-button"
-          @click="router.push(`/bookingsp/edit/${rentalId}`)"
+          @click="router.push(`/bookings-product/edit/${rentalId}`)"
         >
           Edit
         </button>

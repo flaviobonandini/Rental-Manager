@@ -317,7 +317,10 @@ async function saveRental() {
       throw new Error(data.message || 'Unable to save the booking.')
     }
 
-    await router.push('/bookings')
+    await router.push({
+      path: '/bookings-service',
+      query: { saved: isNew.value ? 'created' : 'updated' },
+    })
   } catch (cause) {
     error.value = errorMessage(cause, 'Error while saving the booking.')
   } finally {
@@ -336,7 +339,7 @@ onMounted(loadRental)
         <p v-if="isNew">The number is generated automatically in the format RTS-DDMMYY-XXXX</p>
         <p v-else>{{ rental.rental_number }}</p>
       </div>
-      <button type="button" class="back-button" @click="router.push('/bookings')">
+      <button type="button" class="back-button" @click="router.push('/bookings-service')">
         ← Back to bookings
       </button>
     </header>
@@ -478,14 +481,14 @@ onMounted(loadRental)
       <p v-if="error" class="error-message" role="alert">{{ error }}</p>
 
       <footer class="form-actions">
-        <button type="button" class="secondary-button" @click="router.push('/bookings')">
+        <button type="button" class="secondary-button" @click="router.push('/bookings-service')">
           {{ isView ? 'Close' : 'Cancel' }}
         </button>
         <button
           v-if="isView"
           type="button"
           class="primary-button"
-          @click="router.push(`/bookings/edit/${rentalId}`)"
+          @click="router.push(`/bookings-service/edit/${rentalId}`)"
         >
           ✏️ Edit
         </button>
