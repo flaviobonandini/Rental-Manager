@@ -383,47 +383,7 @@ onUnmounted(() => {
           </div>
 
         </div>
-        <div class="form-group product-image">
-          <label for="product-image">Product image</label>
-          <button
-            v-if="product.immagine"
-            type="button"
-            class="image-preview-button"
-            aria-label="Enlarge product image"
-            aria-haspopup="dialog"
-            @click="imageDialog?.showModal()"
-          >
-            <img
-              :src="product.immagine"
-              :alt="product.nome || 'Product image'"
-              class="image-preview"
-            />
-          </button>
-          <p v-else class="image-help">No image selected.</p>
-          <template v-if="!isView">
-            <input
-              id="product-image"
-              ref="imageInput"
-              type="file"
-              accept="image/*"
-              :disabled="uploadingImage || saving"
-              @change="uploadImage"
-            />
-            <p class="image-help" role="status">
-              {{ uploadingImage ? 'Uploading image...' : 'Save the product to confirm the image change.' }}
-            </p>
-            <button
-              v-if="product.immagine"
-              type="button"
-              class="cancel-button remove-image"
-              :disabled="uploadingImage || saving"
-              @click="removeImage"
-            >
-              Remove image
-            </button>
-            <p v-if="imageError" class="error" role="alert">{{ imageError }}</p>
-          </template>
-        </div>
+
 
         <div class="form-group description">
           <label>Description</label>
@@ -546,7 +506,48 @@ onUnmounted(() => {
             <EditorContent :editor="editor" />
           </div>
         </div>
-
+        
+        <div class="form-group product-image">
+          <label for="product-image">Product image</label>
+          <button
+            v-if="product.immagine"
+            type="button"
+            class="image-preview-button"
+            aria-label="Enlarge product image"
+            aria-haspopup="dialog"
+            @click="imageDialog?.showModal()"
+          >
+            <img
+              :src="product.immagine"
+              :alt="product.nome || 'Product image'"
+              class="image-preview"
+            />
+          </button>
+          <p v-else class="image-help">No image selected.</p>
+          <template v-if="!isView">
+            <input
+              id="product-image"
+              ref="imageInput"
+              type="file"
+              accept="image/*"
+              :disabled="uploadingImage || saving"
+              @change="uploadImage"
+            />
+            <p class="image-help" role="status">
+              {{ uploadingImage ? 'Uploading image...' : 'Save the product to confirm the image change.' }}
+            </p>
+            <button
+              v-if="product.immagine"
+              type="button"
+              class="cancel-button remove-image"
+              :disabled="uploadingImage || saving"
+              @click="removeImage"
+            >
+              Remove image
+            </button>
+            <p v-if="imageError" class="error" role="alert">{{ imageError }}</p>
+          </template>
+        </div>
       </div>
       <div
         v-if="error"
