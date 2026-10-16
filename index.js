@@ -2233,6 +2233,355 @@ app.post("/api/users/:id/copy", authenticateToken, requireAdmin, async (req, res
 });
 
 
+app.put("/api/products/:id", authenticateToken,async (req, res) => {
+
+    const id = req.params.id;
+
+    const {
+        nome,
+        codice,
+        descrizione,
+        immagine,
+        active
+    } = req.body;
+
+    let conn;
+
+    try {
+
+        if (!nome) {
+            return res.status(400).json({
+                message: "Il nome del prodotto è obbligatorio"
+            });
+        }
+
+        conn = await db.getConnection();
+
+        const rows = await conn.query(`
+            SELECT id
+            FROM products
+            WHERE id = ?
+            LIMIT 1
+        `, [id]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({
+                message: "Prodotto non trovato"
+            });
+        }
+
+        await conn.query(`
+            UPDATE products
+            SET
+                nome = ?,
+                codice = ?,
+                descrizione = ?,
+                immagine = ?,
+                active = ?
+            WHERE id = ?
+        `, [
+            nome,
+            codice,
+            descrizione || null,
+            immagine || null,
+            Number(active) === 0 ? 0 : 1,
+            id
+        ]);
+
+        return res.json({
+            message: "Prodotto modificato correttamente"
+        });
+
+    } catch (error) {
+
+        console.error("Errore modifica prodotto:", error);
+
+        return res.status(500).json({
+            message: "Errore durante la modifica del prodotto"
+        });
+
+    } finally {
+
+        if (conn) {
+            conn.release();
+        }
+    }
+});
+
+app.get("/api/products", authenticateToken, async (req, res) => {
+
+    let conn;
+
+    try {
+
+        conn = await db.getConnection();
+
+        const rows = await conn.query(`
+            SELECT
+                p.id,
+                p.codice,
+                p.nome,
+                p.descrizione,
+                p.immagine,
+                p.active
+            FROM products p
+            ORDER BY id DESC
+        `);
+        console.log("Prodotti caricati:", rows.length);
+        return res.json(rows);
+
+    } catch (error) {
+
+        console.error("Errore caricamento prodotti:", error);
+
+        return res.status(500).json({
+            message: "Errore durante il caricamento dei prodotti"
+        });
+
+    } finally {
+
+        if (conn) {
+            conn.release();
+        }
+    }
+});
+
+app.post("/api/products", authenticateToken, async (req, res) => {
+
+    const {
+        nome,
+        codice,
+        descrizione,
+        immagine,
+        active
+    } = req.body;
+
+    let conn;
+
+    try {
+
+        if (!nome) {
+            return res.status(400).json({
+                message: "Il nome del prodotto è obbligatorio"
+            });
+        }
+
+        conn = await db.getConnection();
+
+        /*
+         * Codice temporaneo univoco.
+         * Ci serve perché codice è NOT NULL e UNIQUE,
+         * ma non conosciamo ancora l'ID AUTO_INCREMENT.
+         */
+        const codiceProvvisorio =
+            `TMP-${Date.now()}`;
+
+        const result = await conn.query(`
+            INSERT INTO products
+            (
+            nome,
+            codice,
+            descrizione,
+            immagine,
+            active
+            )
+            VALUES (?, ?, ?, ?, ?)
+        `, [
+            nome,
+            codiceProvvisorio,
+            descrizione || null,
+            immagine || null,
+            Number(active) === 0 ? 0 : 1
+        ]);
+
+        /*
+         * ID generato da MariaDB
+         */
+        const newId = Number(result.insertId);
+
+        /*
+         * Creo il codice prodotto
+         *
+         * 1   -> PRD001
+         * 12  -> PRD012
+         * 123 -> PRD123
+         */
+        const nuovoCodice =
+            "PRD" + String(newId).padStart(3, "0");
+
+
+        /*
+         * Controllo che non esista già
+         */
+        const existing = await conn.query(`
+            SELECT id
+            FROM products
+            WHERE codice = ?
+              AND id <> ?
+            LIMIT 1
+        `, [
+            nuovoCodice,
+            newId
+        ]);
+
+        if (existing.length > 0) {
+
+            // Elimino il record appena inserito
+            await conn.query(
+                "DELETE FROM products WHERE id = ?",
+                [newId]
+            );
+
+            return res.status(409).json({
+                message:
+                    `Il codice prodotto ${nuovoCodice} esiste già`
+            });
+        }
+
+
+        /*
+         * Sostituisco il codice temporaneo
+         * con quello definitivo.
+         */
+        await conn.query(`
+            UPDATE products
+            SET codice = ?
+            WHERE id = ?
+        `, [
+            nuovoCodice,
+            newId
+        ]);
+
+
+        return res.status(201).json({
+
+            message:
+                "Prodotto creato correttamente",
+
+            id: newId,
+
+            codice: nuovoCodice
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            "Errore creazione prodotto:",
+            error
+        );
+
+        return res.status(500).json({
+            message:
+                "Errore durante la creazione del prodotto"
+        });
+
+    } finally {
+
+        if (conn) {
+            conn.release();
+        }
+    }
+});
+
+app.get("/api/products/:id",authenticateToken, async (req, res) => {
+
+    const id = req.params.id;
+    let conn;
+
+    try {
+
+        conn = await db.getConnection();
+
+        const rows = await conn.query(`
+            SELECT
+                p.id,
+                p.codice,
+                p.nome,
+                p.descrizione,
+                p.immagine,
+                p.active
+            FROM products p
+            WHERE p.id = ?
+            LIMIT 1
+        `, [id]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({
+                message: "Prodotto non trovato"
+            });
+        }
+
+        return res.json(rows[0]);
+
+    } catch (error) {
+
+        console.error("Errore caricamento prodotto:", error);
+
+        return res.status(500).json({
+            message: "Errore durante il caricamento del prodotto"
+        });
+
+    } finally {
+
+        if (conn) {
+            conn.release();
+        }
+    }
+});
+
+app.delete("/api/products/:id",authenticateToken, requireAdmin, async (req, res) => {
+
+    const id = req.params.id;
+    let conn;
+
+    try {
+
+        conn = await db.getConnection();
+
+        // Controllo che il prodotto esista
+        const rows = await conn.query(`
+            SELECT id, nome
+            FROM products
+            WHERE id = ?
+            LIMIT 1
+        `, [id]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({
+                message: "Prodotto non trovato"
+            });
+        }
+
+        await conn.query(`
+            DELETE FROM products
+            WHERE id = ?
+        `, [id]);
+
+        return res.json({
+            message: "Prodotto eliminato correttamente"
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Errore eliminazione prodotto:",
+            error
+        );
+
+        return res.status(500).json({
+            message:
+                "Errore durante l'eliminazione del prodotto"
+        });
+
+    } finally {
+
+        if (conn) {
+            conn.release();
+        }
+    }
+});
+
 app.get("/api/payment-methods", authenticateToken, async (req, res) => {
 
         let conn;
