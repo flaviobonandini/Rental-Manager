@@ -15,6 +15,17 @@ interface Product {
 const router = useRouter()
 
 const products = ref<Product[]>([])
+const imageDialog = ref<HTMLDialogElement | null>(null)
+const selectedImage = ref('')
+const selectedImageName = ref('')
+
+function openImage(product: Product) {
+  if (!product.immagine) return
+  selectedImage.value = product.immagine
+  selectedImageName.value = product.nome || 'Product image'
+  imageDialog.value?.showModal()
+}
+
 const loading = ref(true)
 const error = ref('')
 
@@ -566,7 +577,22 @@ async function duplicateProduct(product: Product) {
             </td>
 
             <td>
-              {{ product.immagine || '—' }}
+              <button
+                v-if="product.immagine"
+                type="button"
+                class="thumbnail-button"
+                :aria-label="`Enlarge image: ${product.nome || product.codice}`"
+                aria-haspopup="dialog"
+                @click="openImage(product)"
+              >
+                <img
+                  :src="product.immagine"
+                  :alt="product.nome || 'Product image'"
+                  class="product-thumbnail"
+                  loading="lazy"
+                />
+              </button>
+              <span v-else>—</span>
             </td>
 
 
@@ -743,9 +769,101 @@ async function duplicateProduct(product: Product) {
       </tbody>
     </table>
   </article>
+  <dialog
+    ref="imageDialog"
+    class="image-dialog"
+    aria-label="Enlarged product image"
+    @click.self="imageDialog?.close()"
+  >
+    <div class="image-dialog-content">
+      <button
+        type="button"
+        class="image-dialog-close"
+        aria-label="Close image"
+        autofocus
+        @click="imageDialog?.close()"
+      >
+        &times;
+      </button>
+      <img
+        v-if="selectedImage"
+        :src="selectedImage"
+        :alt="selectedImageName"
+        class="image-enlarged"
+      />
+    </div>
+  </dialog>
 </template>
 
 <style scoped>
+.thumbnail-button {
+  display: block;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  cursor: zoom-in;
+}
+
+.thumbnail-button:focus-visible {
+  outline: 3px solid #2563eb;
+  outline-offset: 3px;
+}
+
+.image-dialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  max-width: 96vw;
+  max-height: 96dvh;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+}
+
+.image-dialog::backdrop {
+  background: rgb(15 23 42 / 80%);
+}
+
+.image-dialog-content {
+  position: relative;
+  padding: 48px 16px 16px;
+  background: #fff;
+}
+
+.image-enlarged {
+  display: block;
+  max-width: min(1100px, 85vw);
+  max-height: 75dvh;
+  object-fit: contain;
+  margin: auto;
+}
+
+.image-dialog-close {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #172033;
+  font-size: 26px;
+  cursor: pointer;
+}
+
+.product-thumbnail {
+  display: block;
+  width: 80px;
+  height: 60px;
+  object-fit: contain;
+  border: 1px solid #dbe2ec;
+  border-radius: 6px;
+  background: #fff;
+}
+
 .page {
   width: 100%;
   padding: 30px;
