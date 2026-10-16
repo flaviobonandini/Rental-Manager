@@ -120,15 +120,15 @@ onUnmounted(() => {
       <p class="menu-caption">MENU</p>
       <nav class="side-navigation" aria-label="Main menu">
         <RouterLink to="/" class="nav-link" exact-active-class="active">
-          <span class="nav-icon" aria-hidden="true">⌂</span>
+          <span class="nav-icon" aria-hidden="true">🏠</span>
           <span>Home</span>
         </RouterLink>
         <RouterLink to="/bookings-service" class="nav-link" active-class="active">
-          <span class="nav-icon" aria-hidden="true">▣</span>
+          <span class="nav-icon" aria-hidden="true">🛠</span>
           <span>Service booking </span>
         </RouterLink>
         <RouterLink to="/bookings-product" class="nav-link" active-class="active">
-          <span class="nav-icon" aria-hidden="true">▣</span>
+          <span class="nav-icon" aria-hidden="true">🛒</span>
           <span>Product booking</span>
         </RouterLink>        
         <RouterLink
@@ -137,7 +137,7 @@ onUnmounted(() => {
           class="nav-link"
           active-class="active"
         >
-          <span class="nav-icon" aria-hidden="true">♙</span>
+          <span class="nav-icon" aria-hidden="true">👥</span>
           <span>Users</span>
         </RouterLink>
         <RouterLink
@@ -146,7 +146,7 @@ onUnmounted(() => {
           class="nav-link"
           active-class="active"
         >
-          <span class="nav-icon" aria-hidden="true">▣</span>
+          <span class="nav-icon" aria-hidden="true">📦</span>
           <span>Products</span>
         </RouterLink>
       </nav>
