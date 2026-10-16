@@ -9,12 +9,13 @@ const PORT = process.env.PORT || 5000;
 
 const path = require('path');
 const multer = require('multer');
+const uploadsDirectory = path.join(__dirname, 'server', 'uploads');
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
 
         cb(
             null,
-            path.join(__dirname, 'uploads', 'logos')
+            path.join(uploadsDirectory, 'logos')
         );
 
     },
@@ -213,17 +214,16 @@ const upload = multer({ storage });
 
 app.use(
     '/uploads',
-    express.static(path.join(__dirname, 'uploads'))
+    express.static(uploadsDirectory)
 );
 
 const productStorage = multer.diskStorage({
 
     destination: function (req, file, cb) {
-
-        cb(
-            null,
-            path.join(__dirname, 'uploads', 'products')
-        );
+        const directory = path.join(uploadsDirectory, 'products');
+        require('node:fs').mkdir(directory, { recursive: true }, (error) => {
+            cb(error, directory);
+        });
 
     },
 
@@ -2581,6 +2581,24 @@ app.delete("/api/products/:id",authenticateToken, requireAdmin, async (req, res)
         }
     }
 });
+
+
+app.post("/api/products/upload", authenticateToken,
+    uploadProduct.single("image"),
+    (req, res) => {
+
+        if (!req.file) {
+            return res.status(400).json({
+                message: "Nessuna immagine ricevuta"
+            });
+        }
+
+        return res.json({
+            path: `/uploads/products/${req.file.filename}`
+        });
+    }
+);
+
 
 app.get("/api/payment-methods", authenticateToken, async (req, res) => {
 
