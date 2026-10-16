@@ -24,6 +24,10 @@ const isNew = computed(() => route.name === 'product-new')
 
 const loading = ref(false)
 const saving = ref(false)
+const uploadingImage = ref(false)
+const imageError = ref('')
+const imageInput = ref<HTMLInputElement | null>(null)
+const imageDialog = ref<HTMLDialogElement | null>(null)
 const error = ref('')
 const notificationMessage = ref('')
 const notificationType = ref<'success' | 'error'>('success')
@@ -128,8 +132,7 @@ async function loadProduct() {
     product.value = {
       ...product.value,
       ...data,
-      password: '',
-      confirmPassword: '',
+      immagine: data.immagine || '',
     }
     editor.value?.commands.setContent(product.value.descrizione || '', {
       emitUpdate: false,
@@ -144,8 +147,49 @@ async function loadProduct() {
   }
 }
 
+async function uploadImage(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file || isView.value || uploadingImage.value || saving.value) return
+
+  imageError.value = ''
+  if (!file.type.startsWith('image/')) {
+    imageError.value = 'Please select an image file.'
+    input.value = ''
+    return
+  }
+
+  try {
+    uploadingImage.value = true
+    const formData = new FormData()
+    formData.append('image', file)
+
+    const response = await authFetch('/api/products/upload', {
+      method: 'POST',
+      body: formData,
+    })
+    const data = await response.json().catch(() => null)
+    if (!response.ok || typeof data?.path !== 'string' || !data.path) {
+      throw new Error(data?.message || 'Failed to upload the image.')
+    }
+
+    product.value.immagine = data.path
+  } catch (err) {
+    imageError.value = err instanceof Error ? err.message : 'Failed to upload the image.'
+  } finally {
+    uploadingImage.value = false
+    input.value = ''
+  }
+}
+
+function removeImage() {
+  product.value.immagine = ''
+  imageError.value = ''
+  if (imageInput.value) imageInput.value.value = ''
+}
+
 async function saveProduct() {
-  if (isView.value) {
+  if (isView.value || saving.value || uploadingImage.value) {
     return
   }
 
@@ -339,7 +383,47 @@ onUnmounted(() => {
           </div>
 
         </div>
-        <br>
+        <div class="form-group product-image">
+          <label for="product-image">Product image</label>
+          <button
+            v-if="product.immagine"
+            type="button"
+            class="image-preview-button"
+            aria-label="Enlarge product image"
+            aria-haspopup="dialog"
+            @click="imageDialog?.showModal()"
+          >
+            <img
+              :src="product.immagine"
+              :alt="product.nome || 'Product image'"
+              class="image-preview"
+            />
+          </button>
+          <p v-else class="image-help">No image selected.</p>
+          <template v-if="!isView">
+            <input
+              id="product-image"
+              ref="imageInput"
+              type="file"
+              accept="image/*"
+              :disabled="uploadingImage || saving"
+              @change="uploadImage"
+            />
+            <p class="image-help" role="status">
+              {{ uploadingImage ? 'Uploading image...' : 'Save the product to confirm the image change.' }}
+            </p>
+            <button
+              v-if="product.immagine"
+              type="button"
+              class="cancel-button remove-image"
+              :disabled="uploadingImage || saving"
+              @click="removeImage"
+            >
+              Remove image
+            </button>
+            <p v-if="imageError" class="error" role="alert">{{ imageError }}</p>
+          </template>
+        </div>
 
         <div class="form-group description">
           <label>Description</label>
@@ -498,7 +582,7 @@ onUnmounted(() => {
           v-if="!isView"
           type="submit"
           class="save-button"
-          :disabled="saving"
+          :disabled="saving || uploadingImage"
         >
           {{
             saving
@@ -512,6 +596,31 @@ onUnmounted(() => {
       </div>
 
     </form>
+
+    <dialog
+      ref="imageDialog"
+      class="image-dialog"
+      aria-label="Enlarged product image"
+      @click.self="imageDialog?.close()"
+    >
+      <div class="image-dialog-content">
+        <button
+          type="button"
+          class="image-dialog-close"
+          aria-label="Close image"
+          autofocus
+          @click="imageDialog?.close()"
+        >
+          &times;
+        </button>
+        <img
+          v-if="product.immagine"
+          :src="product.immagine"
+          :alt="product.nome || 'Product image'"
+          class="image-enlarged"
+        />
+      </div>
+    </dialog>
 
   </div>
 </template>
@@ -619,6 +728,90 @@ onUnmounted(() => {
 
 .description {
   margin-top: 22px;
+}
+
+.product-image {
+  margin-top: 22px;
+}
+
+.image-preview {
+  display: block;
+  width: 100%;
+  max-width: 320px;
+  height: 220px;
+  object-fit: contain;
+  border: 1px solid #dbe2ec;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.image-preview-button {
+  width: 100%;
+  max-width: 320px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  cursor: zoom-in;
+}
+
+.image-preview-button:focus-visible {
+  outline: 3px solid #2563eb;
+  outline-offset: 3px;
+}
+
+.image-dialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  max-width: 96vw;
+  max-height: 96dvh;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+}
+
+.image-dialog::backdrop {
+  background: rgb(15 23 42 / 80%);
+}
+
+.image-dialog-content {
+  position: relative;
+  padding: 48px 16px 16px;
+  background: #fff;
+}
+
+.image-enlarged {
+  display: block;
+  max-width: min(1100px, 85vw);
+  max-height: 75dvh;
+  object-fit: contain;
+  margin: auto;
+}
+
+.image-dialog-close {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #172033;
+  font-size: 26px;
+  cursor: pointer;
+}
+
+.image-help {
+  margin: 4px 0;
+  color: #475569;
+  font-size: 13px;
+}
+
+.remove-image {
+  align-self: flex-start;
 }
 
 .editor-wrapper {

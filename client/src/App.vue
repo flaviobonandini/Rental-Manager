@@ -149,6 +149,15 @@ onUnmounted(() => {
           <span class="nav-icon" aria-hidden="true">📦</span>
           <span>Products</span>
         </RouterLink>
+        <RouterLink
+          v-if="isAdministrator"
+          to="/services"
+          class="nav-link"
+          active-class="active"
+        >
+          <span class="nav-icon" aria-hidden="true">🧾</span>
+          <span>Services</span>
+        </RouterLink>
       </nav>
 
       <div class="sidebar-footer">
