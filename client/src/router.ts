@@ -5,9 +5,11 @@ import ProductBookingsView from './views/ProductBookingsView.vue'
 import UsersView from './views/UsersView.vue'
 import UserFormView from './views/UserFormView.vue'
 import ProductsView from './views/ProductsView.vue'
-import ProductFormView from './views/ProductFormView.vue'  //ATTENTION: This is a temporary fix. The correct component should be ProductFormView, but it is currently not implemented.
+import ProductFormView from './views/ProductFormView.vue'  
 import RentalFormView from './views/RentalFormView.vue'
 import ProductRentalFormView from './views/ProductRentalFormView.vue'
+import ServicesView from './views/ServicesView.vue'
+import ServiceFormView from './views/ServiceFormView.vue'  
 
 
 function isAdministrator() {
@@ -77,6 +79,32 @@ const router = createRouter({
       component: ProductRentalFormView,
       meta: { title: 'Modify product booking', requiresAdmin: true },
     },
+    {
+      path: '/services',
+      name: 'services',
+      component: ServicesView,
+      meta: { title: 'Services', requiresAdmin: true },
+    },
+    {
+      path: '/services/new',
+      name: 'services-new',
+      component: ServiceFormView,
+      meta: { title: 'New service', requiresAdmin: true },
+    },
+    {
+      path: '/services/edit/:id',
+      name: 'service-edit',
+      component: ServiceFormView,
+      meta: { title: 'Edit Service', requiresAdmin: true },
+    },
+    {
+      path: '/services/view/:id',
+      name: 'service-view',
+      component: ServiceFormView,
+      meta: { title: 'Service details', requiresAdmin: true },
+    },
+
+
     {
       path: '/products',
       name: 'products',

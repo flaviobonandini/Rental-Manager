@@ -238,8 +238,32 @@ const productStorage = multer.diskStorage({
 
 });
 
+const serviceStorage = multer.diskStorage({
+
+    destination: function (req, file, cb) {
+        const directory = path.join(uploadsDirectory, 'services');
+        require('node:fs').mkdir(directory, { recursive: true }, (error) => {
+            cb(error, directory);
+        });
+
+    },
+
+    filename: function (req, file, cb) {
+
+        const uniqueName =
+            Date.now() + '-' + file.originalname;
+
+        cb(null, uniqueName);
+
+    }
+
+});
+
 const uploadProduct = multer({
     storage: productStorage
+});
+const uploadService = multer({
+    storage: serviceStorage
 });
 
 app.get(
@@ -2231,6 +2255,419 @@ app.post("/api/users/:id/copy", authenticateToken, requireAdmin, async (req, res
         }
     }
 });
+
+app.get("/api/services", authenticateToken, async (req, res) => {
+
+    let conn;
+
+    try {
+
+        conn = await db.getConnection();
+
+        const rows = await conn.query(`
+            SELECT
+                s.id,
+                s.name,
+                s.time_type,
+                s.time_unit,
+                s.description,
+                s.price,
+                s.immagine,
+                s.active,
+                s.sort_order
+            FROM services s
+            ORDER BY id DESC
+        `);
+        console.log("Servizi caricati:", rows.length);
+        return res.json(rows);
+
+    } catch (error) {
+
+        console.error("Errore caricamento services:", error);
+
+        return res.status(500).json({
+            message: "Errore durante il caricamento dei servizi"
+        });
+
+    } finally {
+
+        if (conn) {
+            conn.release();
+        }
+    }
+});
+
+
+app.put("/api/services/:id", authenticateToken,async (req, res) => {
+
+    const id = req.params.id;
+
+    const {
+        name,
+        description,
+        time_type,
+        time_unit,
+        sort_order,
+        price,
+        immagine,
+        active
+    } = req.body;
+
+    let conn;
+
+    try {
+
+        if (typeof name !== "string" || !name.trim()) {
+            return res.status(400).json({
+                message: "Il nome del servizio è obbligatorio"
+            });
+        }
+
+        conn = await db.getConnection();
+
+        const rows = await conn.query(`
+            SELECT id
+            FROM services
+            WHERE id = ?
+            LIMIT 1
+        `, [id]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({
+                message: "Servizio non trovato"
+            });
+        }
+
+        await conn.query(`
+            UPDATE services
+            SET
+                name = ?,
+                description = ?,
+                time_type = ?,
+                time_unit = ?,
+                sort_order = ?,
+                price = ?,
+                immagine = ?,
+                active = ?
+            WHERE id = ?
+        `, [
+            name.trim(),
+            description || null,
+            time_type ?? 0,
+            time_unit ?? 0,
+            sort_order ?? 100,
+            price ?? 0,
+            immagine || null,
+            Number(active) === 0 ? 0 : 1,
+            id
+        ]);
+
+        return res.json({
+            message: "Servizio modificato correttamente"
+        });
+
+    } catch (error) {
+
+        console.error("Errore modifica servizio:", error);
+
+        return res.status(500).json({
+            message: "Errore durante la modifica del servizio"
+        });
+
+    } finally {
+
+        if (conn) {
+            conn.release();
+        }
+    }
+});
+
+
+app.get("/api/services/:id",authenticateToken, async (req, res) => {
+
+    const id = req.params.id;
+    let conn;
+
+    try {
+
+        conn = await db.getConnection();
+
+        const rows = await conn.query(`
+            SELECT
+                s.id,
+                s.name,
+                s.description,
+                s.time_type,
+                s.time_unit,
+                s.price,
+                s.immagine,
+                s.active,
+                sort_order
+            FROM services s
+            WHERE s.id = ?
+            LIMIT 1
+        `, [id]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({
+                message: "Service non trovato"
+            });
+        }
+
+        return res.json(rows[0]);
+
+    } catch (error) {
+
+        console.error("Errore caricamento service:", error);
+
+        return res.status(500).json({
+            message: "Errore durante il caricamento del prodotto"
+        });
+
+    } finally {
+
+        if (conn) {
+            conn.release();
+        }
+    }
+});
+
+app.post("/api/services", authenticateToken, async (req, res) => {
+
+    const {
+        name,
+        description,
+        immagine,
+        time_type,
+        time_unit,
+        sort_order,
+        price,
+        active
+    } = req.body;
+
+    let conn;
+
+    try {
+
+        if (!name) {
+            return res.status(400).json({
+                message: "Il nome del servizio è obbligatorio"
+            });
+        }
+
+        conn = await db.getConnection();
+
+        const result = await conn.query(`
+            INSERT INTO services
+            (
+            name,
+            description,
+            time_type,
+            time_unit,
+            sort_order,
+            price,
+            immagine,
+            active
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `, [
+            name,
+            description || null,
+            time_type || 0,
+            time_unit || 0,
+            sort_order || 100,
+            price || 0,
+            immagine || null,
+            Number(active) === 0 ? 0 : 1
+        ]);
+
+        /*
+         * ID generato da MariaDB
+         */
+        const newId = Number(result.insertId);
+
+        return res.status(201).json({
+
+            message:
+                "Service creato correttamente",
+
+            id: newId
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            "Errore creazione prodotto:",
+            error
+        );
+
+        return res.status(500).json({
+            message:
+                "Errore durante la creazione del prodotto"
+        });
+
+    } finally {
+
+        if (conn) {
+            conn.release();
+        }
+    }
+});
+
+app.post("/api/services/:id/copy", authenticateToken, requireAdmin, async (req, res) => {
+
+    const id = req.params.id;
+    let conn;
+
+    try {
+
+        conn = await db.getConnection();
+
+        // Recupero service originale
+        const rows = await conn.query(`
+            SELECT
+                id,
+                name,
+                description,
+                time_type,
+                time_unit,
+                price,
+                immagine,
+                active,
+                sort_order
+            FROM services   
+            WHERE id = ?
+            LIMIT 1
+        `, [id]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({
+                message: "Servizio non trovato"
+            });
+        }
+
+        const original = rows[0];
+
+        // Inserimento copia
+        const result = await conn.query(`
+            INSERT INTO services
+            (
+                name,
+                description,
+                time_type,
+                time_unit,
+                sort_order,
+                price,
+                immagine,
+                active
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `, [
+            original.name + " (Copy)",
+            original.description || null,
+            original.time_type || 0,
+            original.time_unit || 0,
+            original.sort_order || 100,
+            original.price || 0,
+            original.immagine || null,
+            original.active
+        ]);
+
+        const newId = Number(result.insertId);
+
+        return res.status(201).json({
+            message: "Servizio duplicato correttamente",
+            id: newId
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Errore duplicazione servizio:",
+            error
+        );
+
+        return res.status(500).json({
+            message:
+                "Errore durante la duplicazione del servizio"
+        });
+
+    } finally {
+
+        if (conn) {
+            conn.release();
+        }
+    }
+});
+
+app.delete("/api/services/:id",authenticateToken, requireAdmin, async (req, res) => {
+
+    const id = req.params.id;
+    let conn;
+
+    try {
+
+        conn = await db.getConnection();
+
+        // Controllo che il prodotto esista
+        const rows = await conn.query(`
+            SELECT id, name
+            FROM services
+            WHERE id = ?
+            LIMIT 1
+        `, [id]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({
+                message: "Servizio non trovato"
+            });
+        }
+
+        await conn.query(`
+            DELETE FROM services
+            WHERE id = ?
+        `, [id]);
+
+        return res.json({
+            message: "Servizio eliminato correttamente"
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Errore eliminazione servizio:",
+            error
+        );
+
+        return res.status(500).json({
+            message:
+                "Errore durante l'eliminazione del servizio"
+        });
+
+    } finally {
+
+        if (conn) {
+            conn.release();
+        }
+    }
+});
+
+app.post("/api/services/upload", authenticateToken,
+    uploadService.single("image"),
+    (req, res) => {
+
+        if (!req.file) {
+            return res.status(400).json({
+                message: "Nessuna immagine ricevuta"
+            });
+        }
+
+        return res.json({
+            path: `/uploads/services/${req.file.filename}`
+        });
+    }
+);
 
 
 app.put("/api/products/:id", authenticateToken,async (req, res) => {
