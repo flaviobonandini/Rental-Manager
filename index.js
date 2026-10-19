@@ -44,7 +44,7 @@ function authenticateToken(req, res, next) {
     if (!token) {
         return res.status(401).json({
             success: false,
-            message: "Token mancante"
+            message: "Missing token"
         });
     }
 
@@ -56,7 +56,7 @@ function authenticateToken(req, res, next) {
             if (error) {
                 return res.status(401).json({
                     success: false,
-                    message: "Token non valido o scaduto"
+                    message: "Invalid or expired token"
                 });
             }
 
@@ -77,7 +77,7 @@ function requireAdmin(req, res, next) {
     ) {
         return res.status(403).json({
             success: false,
-            message: "Accesso riservato agli amministratori"
+            message: "Access restricted to administrators"
         });
     }
 
@@ -273,7 +273,7 @@ app.get(
 
         res.json({
             success: true,
-            message: "Token valido",
+            message: "Valid token",
             user: req.user
         });
     }
@@ -291,7 +291,7 @@ app.post("/api/login", async (req, res) => {
         if (!username || !password) {
             return res.status(400).json({
                 success: false,
-                message: "Username e password obbligatori"
+                message: "Username and password are required"
             });
         }
 
@@ -316,7 +316,7 @@ app.post("/api/login", async (req, res) => {
         if (rows.length === 0) {
             return res.status(401).json({
                 success: false,
-                message: "Username o password non corretti"
+                message: "Incorrect username or password"
             });
         }
 
@@ -330,14 +330,14 @@ app.post("/api/login", async (req, res) => {
         if (!passwordCorretta) {
             return res.status(401).json({
                 success: false,
-                message: "Username o password non corretti"
+                message: "Incorrect username or password"
             });
         }
 
         if (!user.active) {
             return res.status(403).json({
                 success: false,
-                message: "Utente disabilitato"
+                message: "User account is disabled"
             });
         }
 
@@ -362,7 +362,7 @@ app.post("/api/login", async (req, res) => {
 
         return res.json({
             success: true,
-            message: "Login effettuato correttamente",
+            message: "Login successful",
 
             token: token,
 
@@ -379,11 +379,11 @@ app.post("/api/login", async (req, res) => {
 
     } catch (error) {
 
-        console.error("Errore login:", error);
+        console.error("Login error:", error);
 
         return res.status(500).json({
             success: false,
-            message: "Errore durante il login"
+            message: "Login failed"
         });
 
     } finally {
@@ -425,7 +425,7 @@ app.post("/api/register", async (req, res) => {
     ) {
         return res.status(400).json({
             success: false,
-            message: "Inserisci nome, cognome, uno username e un'email validi e una password di almeno 8 caratteri"
+            message: "Enter a valid first name, last name, username, and email address, and a password of at least 8 characters"
         });
     }
 
@@ -443,7 +443,7 @@ app.post("/api/register", async (req, res) => {
         if (existing.length > 0) {
             return res.status(409).json({
                 success: false,
-                message: "Username o email già utilizzati"
+                message: "Username or email is already in use"
             });
         }
 
@@ -465,21 +465,21 @@ app.post("/api/register", async (req, res) => {
 
         return res.status(201).json({
             success: true,
-            message: "Registrazione completata. Ora puoi accedere.",
+            message: "Registration complete. You can now log in.",
             id: Number(result.insertId)
         });
     } catch (error) {
         if (error.code === "ER_DUP_ENTRY") {
             return res.status(409).json({
                 success: false,
-                message: "Username o email già utilizzati"
+                message: "Username or email is already in use"
             });
         }
 
-        console.error("Errore registrazione:", error);
+        console.error("Registration error:", error);
         return res.status(500).json({
             success: false,
-            message: "Errore durante la registrazione"
+            message: "Registration failed"
         });
     } finally {
         if (conn) {
@@ -524,10 +524,10 @@ app.get("/api/rentals", authenticateToken, async (req, res) => {
 
         return res.json(rows);
     } catch (error) {
-        console.error("Errore caricamento prenotazioni:", error);
+        console.error("Error loading bookings:", error);
         return res.status(500).json({
             success: false,
-            message: "Errore durante il caricamento delle prenotazioni"
+            message: "Failed to load bookings"
         });
     } finally {
         if (conn) {
@@ -567,16 +567,16 @@ app.get("/api/rentals/:id", authenticateToken, requireAdmin, async (req, res) =>
         if (rows.length === 0) {
             return res.status(404).json({
                 success: false,
-                message: "Prenotazione non trovata"
+                message: "Booking not found"
             });
         }
 
         return res.json(rows[0]);
     } catch (error) {
-        console.error("Errore caricamento prenotazione:", error);
+        console.error("Error loading booking:", error);
         return res.status(500).json({
             success: false,
-            message: "Errore durante il caricamento della prenotazione"
+            message: "Failed to load the booking"
         });
     } finally {
         if (conn) {
@@ -611,7 +611,7 @@ app.get("/api/rental-availability", authenticateToken, async (req, res) => {
     ) {
         return res.status(400).json({
             success: false,
-            message: "Intervallo calendario non valido"
+            message: "Invalid calendar range"
         });
     }
 
@@ -639,10 +639,10 @@ app.get("/api/rental-availability", authenticateToken, async (req, res) => {
 
         return res.json(rows);
     } catch (error) {
-        console.error("Errore caricamento disponibilità prenotazioni:", error);
+        console.error("Error loading booking availability:", error);
         return res.status(500).json({
             success: false,
-            message: "Errore durante il caricamento della disponibilità"
+            message: "Failed to load booking availability"
         });
     } finally {
         if (conn) {
@@ -683,10 +683,10 @@ app.get("/api/rental-options", authenticateToken, async (req, res) => {
 
         return res.json({ services, users });
     } catch (error) {
-        console.error("Errore caricamento opzioni prenotazione:", error);
+        console.error("Error loading booking options:", error);
         return res.status(500).json({
             success: false,
-            message: "Errore durante il caricamento delle opzioni"
+            message: "Failed to load options"
         });
     } finally {
         if (conn) {
@@ -714,7 +714,7 @@ app.post("/api/rentals", authenticateToken, async (req, res) => {
     ) {
         return res.status(400).json({
             success: false,
-            message: "Seleziona uno slot di un'ora disponibile tra le 08:00 e le 19:00"
+            message: "Select an available one-hour slot between 08:00 and 19:00"
         });
     }
 
@@ -731,7 +731,7 @@ app.post("/api/rentals", authenticateToken, async (req, res) => {
         if (services.length === 0 || owners.length === 0) {
             return res.status(400).json({
                 success: false,
-                message: "Il servizio o il proprietario selezionato non è attivo"
+                message: "The selected service or owner is inactive"
             });
         }
 
@@ -739,14 +739,14 @@ app.post("/api/rentals", authenticateToken, async (req, res) => {
         if (!slotLock) {
             return res.status(503).json({
                 success: false,
-                message: "Prenotazione temporaneamente occupata, riprova"
+                message: "Booking slot is temporarily locked. Please try again."
             });
         }
 
         if (await hasConflictingRental(conn, startDate, stopDate)) {
             return res.status(409).json({
                 success: false,
-                message: "Questo orario è stato appena prenotato. Seleziona un altro slot"
+                message: "This time slot was just booked. Select another slot."
             });
         }
 
@@ -756,7 +756,7 @@ app.post("/api/rentals", authenticateToken, async (req, res) => {
             if (!rentalNumber) {
                 return res.status(409).json({
                     success: false,
-                    message: "Il progressivo giornaliero delle prenotazioni è esaurito"
+                    message: "The daily booking number limit has been reached"
                 });
             }
 
@@ -786,7 +786,7 @@ app.post("/api/rentals", authenticateToken, async (req, res) => {
                     success: true,
                     id: Number(result.insertId),
                     rental_number: rentalNumber,
-                    message: "Prenotazione creata correttamente"
+                    message: "Booking created successfully"
                 });
             } catch (error) {
                 if (error.code !== "ER_DUP_ENTRY") {
@@ -797,20 +797,20 @@ app.post("/api/rentals", authenticateToken, async (req, res) => {
 
         return res.status(409).json({
             success: false,
-            message: "Impossibile generare un numero prenotazione univoco, riprova"
+            message: "Could not generate a unique booking number. Please try again."
         });
     } catch (error) {
-        console.error("Errore creazione prenotazione:", error);
+        console.error("Error creating booking:", error);
         return res.status(500).json({
             success: false,
-            message: "Errore durante la creazione della prenotazione"
+            message: "Failed to create the booking"
         });
     } finally {
         if (conn) {
             try {
                 await releaseRentalSlotLock(conn, slotLock);
             } catch (error) {
-                console.error("Errore rilascio blocco slot prenotazione:", error);
+                console.error("Error releasing booking slot lock:", error);
             }
             conn.release();
         }
@@ -843,7 +843,7 @@ app.put("/api/rentals/:id", authenticateToken, requireAdmin, async (req, res) =>
     ) {
         return res.status(400).json({
             success: false,
-            message: "Controlla numero, servizio, proprietario, slot orario e stato della prenotazione"
+            message: "Check the booking number, service, owner, time slot, and status"
         });
     }
 
@@ -861,14 +861,14 @@ app.put("/api/rentals/:id", authenticateToken, requireAdmin, async (req, res) =>
         if (rentals.length === 0) {
             return res.status(404).json({
                 success: false,
-                message: "Prenotazione non trovata"
+                message: "Booking not found"
             });
         }
 
         if (services.length === 0 || owners.length === 0) {
             return res.status(400).json({
                 success: false,
-                message: "Il servizio o il proprietario selezionato non esiste"
+                message: "The selected service or owner does not exist"
             });
         }
 
@@ -876,14 +876,14 @@ app.put("/api/rentals/:id", authenticateToken, requireAdmin, async (req, res) =>
         if (!slotLock) {
             return res.status(503).json({
                 success: false,
-                message: "Prenotazione temporaneamente occupata, riprova"
+                message: "Booking slot is temporarily locked. Please try again."
             });
         }
 
         if (await hasConflictingRental(conn, startDate, stopDate, req.params.id)) {
             return res.status(409).json({
                 success: false,
-                message: "Questo orario è già occupato da un'altra prenotazione"
+                message: "This time slot is already occupied by another booking"
             });
         }
 
@@ -911,27 +911,27 @@ app.put("/api/rentals/:id", authenticateToken, requireAdmin, async (req, res) =>
 
         return res.json({
             success: true,
-            message: "Prenotazione aggiornata correttamente"
+            message: "Booking updated successfully"
         });
     } catch (error) {
         if (error.code === "ER_DUP_ENTRY") {
             return res.status(409).json({
                 success: false,
-                message: "Il numero prenotazione è già utilizzato"
+                message: "Booking number is already in use"
             });
         }
 
-        console.error("Errore modifica prenotazione:", error);
+        console.error("Error updating booking:", error);
         return res.status(500).json({
             success: false,
-            message: "Errore durante la modifica della prenotazione"
+            message: "Failed to update the booking"
         });
     } finally {
         if (conn) {
             try {
                 await releaseRentalSlotLock(conn, slotLock);
             } catch (error) {
-                console.error("Errore rilascio blocco slot prenotazione:", error);
+                console.error("Error releasing booking slot lock:", error);
             }
             conn.release();
         }
@@ -951,19 +951,19 @@ app.delete("/api/rentals/:id", authenticateToken, requireAdmin, async (req, res)
         if (result.affectedRows === 0) {
             return res.status(404).json({
                 success: false,
-                message: "Prenotazione non trovata"
+                message: "Booking not found"
             });
         }
 
         return res.json({
             success: true,
-            message: "Prenotazione eliminata correttamente"
+            message: "Booking deleted successfully"
         });
     } catch (error) {
-        console.error("Errore eliminazione prenotazione:", error);
+        console.error("Error deleting booking:", error);
         return res.status(500).json({
             success: false,
-            message: "Errore durante l'eliminazione della prenotazione"
+            message: "Failed to delete the booking"
         });
     } finally {
         if (conn) {
@@ -993,7 +993,7 @@ app.post("/api/rentals/:id/copy", authenticateToken, requireAdmin, async (req, r
         if (rentals.length === 0) {
             return res.status(404).json({
                 success: false,
-                message: "Prenotazione non trovata"
+                message: "Booking not found"
             });
         }
 
@@ -1005,7 +1005,7 @@ app.post("/api/rentals/:id/copy", authenticateToken, requireAdmin, async (req, r
         if (!slotLock) {
             return res.status(503).json({
                 success: false,
-                message: "Prenotazione temporaneamente occupata, riprova"
+                message: "Booking slot is temporarily locked. Please try again."
             });
         }
 
@@ -1013,7 +1013,7 @@ app.post("/api/rentals/:id/copy", authenticateToken, requireAdmin, async (req, r
             if (await hasConflictingRental(conn, startDate, stopDate)) {
                 return res.status(409).json({
                     success: false,
-                    message: "Per duplicare la prenotazione, avvia una nuova prenotazione e seleziona uno slot libero"
+                    message: "To duplicate this booking, create a new booking and select an available slot"
                 });
             }
 
@@ -1023,7 +1023,7 @@ app.post("/api/rentals/:id/copy", authenticateToken, requireAdmin, async (req, r
                 if (!rentalNumber) {
                     return res.status(409).json({
                         success: false,
-                        message: "Il progressivo giornaliero delle prenotazioni è esaurito"
+                        message: "The daily booking number limit has been reached"
                     });
                 }
 
@@ -1053,7 +1053,7 @@ app.post("/api/rentals/:id/copy", authenticateToken, requireAdmin, async (req, r
                         success: true,
                         id: Number(result.insertId),
                         rental_number: rentalNumber,
-                        message: "Prenotazione duplicata correttamente"
+                        message: "Booking duplicated successfully"
                     });
                 } catch (error) {
                     if (error.code !== "ER_DUP_ENTRY") {
@@ -1064,16 +1064,16 @@ app.post("/api/rentals/:id/copy", authenticateToken, requireAdmin, async (req, r
 
             return res.status(409).json({
                 success: false,
-                message: "Impossibile generare un numero prenotazione univoco, riprova"
+                message: "Could not generate a unique booking number. Please try again."
             });
         } finally {
             await releaseRentalSlotLock(conn, slotLock);
         }
     } catch (error) {
-        console.error("Errore duplicazione prenotazione:", error);
+        console.error("Error duplicating booking:", error);
         return res.status(500).json({
             success: false,
-            message: "Errore durante la duplicazione della prenotazione"
+            message: "Failed to duplicate the booking"
         });
     } finally {
         if (conn) {
@@ -1117,10 +1117,10 @@ app.get("/api/rental-products", authenticateToken, async (req, res) => {
 
         return res.json(rows);
     } catch (error) {
-        console.error("Errore caricamento prenotazioni prodotti:", error);
+        console.error("Error loading product bookings:", error);
         return res.status(500).json({
             success: false,
-            message: "Errore durante il caricamento delle prenotazioni prodotti"
+            message: "Failed to load product bookings"
         });
     } finally {
         if (conn) {
@@ -1160,16 +1160,16 @@ app.get("/api/rental-products/:id", authenticateToken, requireAdmin, async (req,
         if (rows.length === 0) {
             return res.status(404).json({
                 success: false,
-                message: "Prenotazione prodotto non trovata"
+                message: "Product booking not found"
             });
         }
 
         return res.json(rows[0]);
     } catch (error) {
-        console.error("Errore caricamento prenotazione prodotto:", error);
+        console.error("Error loading product booking:", error);
         return res.status(500).json({
             success: false,
-            message: "Errore durante il caricamento della prenotazione prodotto"
+            message: "Failed to load the product booking"
         });
     } finally {
         if (conn) {
@@ -1210,10 +1210,10 @@ app.get("/api/rental-product-options", authenticateToken, async (req, res) => {
 
         return res.json({ products, users });
     } catch (error) {
-        console.error("Errore caricamento opzioni prenotazione prodotto:", error);
+        console.error("Error loading product booking options:", error);
         return res.status(500).json({
             success: false,
-            message: "Errore durante il caricamento delle opzioni prodotto"
+            message: "Failed to load product booking options"
         });
     } finally {
         if (conn) {
@@ -1248,7 +1248,7 @@ app.get("/api/rental-product-availability", authenticateToken, async (req, res) 
     ) {
         return res.status(400).json({
             success: false,
-            message: "Intervallo date o prodotto non valido"
+            message: "Invalid date range or product"
         });
     }
 
@@ -1263,7 +1263,7 @@ app.get("/api/rental-product-availability", authenticateToken, async (req, res) 
         if (products.length === 0) {
             return res.status(400).json({
                 success: false,
-                message: "Il prodotto selezionato non è attivo"
+                message: "The selected product is inactive"
             });
         }
 
@@ -1277,10 +1277,10 @@ app.get("/api/rental-product-availability", authenticateToken, async (req, res) 
 
         return res.json({ available: !unavailable });
     } catch (error) {
-        console.error("Errore caricamento disponibilità prodotto:", error);
+        console.error("Error loading product availability:", error);
         return res.status(500).json({
             success: false,
-            message: "Errore durante il controllo della disponibilità prodotto"
+            message: "Failed to check product availability"
         });
     } finally {
         if (conn) {
@@ -1316,7 +1316,7 @@ app.post("/api/rental-products", authenticateToken, async (req, res) => {
     ) {
         return res.status(400).json({
             success: false,
-            message: "Seleziona un prodotto e un intervallo date valido"
+            message: "Select a product and a valid date range"
         });
     }
 
@@ -1333,7 +1333,7 @@ app.post("/api/rental-products", authenticateToken, async (req, res) => {
         if (products.length === 0 || owners.length === 0) {
             return res.status(400).json({
                 success: false,
-                message: "Il prodotto o il proprietario selezionato non è attivo"
+                message: "The selected product or owner is inactive"
             });
         }
 
@@ -1341,14 +1341,14 @@ app.post("/api/rental-products", authenticateToken, async (req, res) => {
         if (!productLock) {
             return res.status(503).json({
                 success: false,
-                message: "Prenotazione prodotto temporaneamente occupata, riprova"
+                message: "Product booking is temporarily locked. Please try again."
             });
         }
 
         if (await hasConflictingProductRental(conn, productId, startDate, stopDate)) {
             return res.status(409).json({
                 success: false,
-                message: "Il prodotto non è disponibile nelle date selezionate"
+                message: "The product is unavailable for the selected dates"
             });
         }
 
@@ -1358,7 +1358,7 @@ app.post("/api/rental-products", authenticateToken, async (req, res) => {
             if (!rentalNumber) {
                 return res.status(409).json({
                     success: false,
-                    message: "Il progressivo giornaliero delle prenotazioni prodotto è esaurito"
+                    message: "The daily product booking number limit has been reached"
                 });
             }
 
@@ -1381,7 +1381,7 @@ app.post("/api/rental-products", authenticateToken, async (req, res) => {
                     success: true,
                     id: Number(result.insertId),
                     rental_number: rentalNumber,
-                    message: "Prenotazione prodotto creata correttamente"
+                    message: "Product booking created successfully"
                 });
             } catch (error) {
                 if (error.code !== "ER_DUP_ENTRY") {
@@ -1392,20 +1392,20 @@ app.post("/api/rental-products", authenticateToken, async (req, res) => {
 
         return res.status(409).json({
             success: false,
-            message: "Impossibile generare un numero prenotazione prodotto univoco, riprova"
+            message: "Could not generate a unique product booking number. Please try again."
         });
     } catch (error) {
-        console.error("Errore creazione prenotazione prodotto:", error);
+        console.error("Error creating product booking:", error);
         return res.status(500).json({
             success: false,
-            message: "Errore durante la creazione della prenotazione prodotto"
+            message: "Failed to create the product booking"
         });
     } finally {
         if (conn) {
             try {
                 await releaseRentalSlotLock(conn, productLock);
             } catch (error) {
-                console.error("Errore rilascio blocco prenotazione prodotto:", error);
+                console.error("Error releasing product booking lock:", error);
             }
             conn.release();
         }
@@ -1446,7 +1446,7 @@ app.put("/api/rental-products/:id", authenticateToken, requireAdmin, async (req,
     ) {
         return res.status(400).json({
             success: false,
-            message: "Controlla numero, prodotto, proprietario, date e stato della prenotazione"
+            message: "Check the booking number, product, owner, dates, and status"
         });
     }
 
@@ -1464,14 +1464,14 @@ app.put("/api/rental-products/:id", authenticateToken, requireAdmin, async (req,
         if (rentals.length === 0) {
             return res.status(404).json({
                 success: false,
-                message: "Prenotazione prodotto non trovata"
+                message: "Product booking not found"
             });
         }
 
         if (products.length === 0 || owners.length === 0) {
             return res.status(400).json({
                 success: false,
-                message: "Il prodotto o il proprietario selezionato non esiste"
+                message: "The selected product or owner does not exist"
             });
         }
 
@@ -1479,14 +1479,14 @@ app.put("/api/rental-products/:id", authenticateToken, requireAdmin, async (req,
         if (!productLock) {
             return res.status(503).json({
                 success: false,
-                message: "Prenotazione prodotto temporaneamente occupata, riprova"
+                message: "Product booking is temporarily locked. Please try again."
             });
         }
 
         if (await hasConflictingProductRental(conn, productId, startDate, stopDate, req.params.id)) {
             return res.status(409).json({
                 success: false,
-                message: "Il prodotto è già prenotato nelle date selezionate"
+                message: "The product is already booked for the selected dates"
             });
         }
 
@@ -1514,27 +1514,27 @@ app.put("/api/rental-products/:id", authenticateToken, requireAdmin, async (req,
 
         return res.json({
             success: true,
-            message: "Prenotazione prodotto aggiornata correttamente"
+            message: "Product booking updated successfully"
         });
     } catch (error) {
         if (error.code === "ER_DUP_ENTRY") {
             return res.status(409).json({
                 success: false,
-                message: "Il numero prenotazione è già utilizzato"
+                message: "Booking number is already in use"
             });
         }
 
-        console.error("Errore modifica prenotazione prodotto:", error);
+        console.error("Error updating product booking:", error);
         return res.status(500).json({
             success: false,
-            message: "Errore durante la modifica della prenotazione prodotto"
+            message: "Failed to update the product booking"
         });
     } finally {
         if (conn) {
             try {
                 await releaseRentalSlotLock(conn, productLock);
             } catch (error) {
-                console.error("Errore rilascio blocco prenotazione prodotto:", error);
+                console.error("Error releasing product booking lock:", error);
             }
             conn.release();
         }
@@ -1554,19 +1554,19 @@ app.delete("/api/rental-products/:id", authenticateToken, requireAdmin, async (r
         if (result.affectedRows === 0) {
             return res.status(404).json({
                 success: false,
-                message: "Prenotazione prodotto non trovata"
+                message: "Product booking not found"
             });
         }
 
         return res.json({
             success: true,
-            message: "Prenotazione prodotto eliminata correttamente"
+            message: "Product booking deleted successfully"
         });
     } catch (error) {
-        console.error("Errore eliminazione prenotazione prodotto:", error);
+        console.error("Error deleting product booking:", error);
         return res.status(500).json({
             success: false,
-            message: "Errore durante l'eliminazione della prenotazione prodotto"
+            message: "Failed to delete the product booking"
         });
     } finally {
         if (conn) {
@@ -1750,13 +1750,13 @@ app.get("/api/dashboard", authenticateToken, async (req, res) => {
     } catch (error) {
 
         console.error(
-            "Errore dashboard:",
+            "Dashboard error:",
             error
         );
 
         return res.status(500).json({
             message:
-                "Errore durante il caricamento della dashboard"
+                "Failed to load the dashboard"
         });
 
     } finally {
@@ -1795,10 +1795,10 @@ app.get("/api/users", authenticateToken, requireAdmin, async (req, res) => {
 
     } catch (error) {
 
-        console.error("Errore caricamento utenti:", error);
+        console.error("Error loading users:", error);
 
         res.status(500).json({
-            message: "Errore durante il caricamento degli utenti"
+            message: "Failed to load users"
         });
 
     } finally {
@@ -1837,7 +1837,7 @@ app.get("/api/users/:id", authenticateToken, requireAdmin, async (req, res) => {
 
         if (rows.length === 0) {
             return res.status(404).json({
-                message: "Utente non trovato"
+                message: "User not found"
             });
         }
 
@@ -1845,10 +1845,10 @@ app.get("/api/users/:id", authenticateToken, requireAdmin, async (req, res) => {
 
     } catch (error) {
 
-        console.error("Errore caricamento utente:", error);
+        console.error("Error loading user:", error);
 
         return res.status(500).json({
-            message: "Errore durante il caricamento dell'utente"
+            message: "Failed to load the user"
         });
 
     } finally {
@@ -1879,7 +1879,7 @@ app.post("/api/users", authenticateToken, requireAdmin, async (req, res) => {
         // Controlli minimi
         if (!username || !email || !password) {
             return res.status(400).json({
-                message: "Username, email e password sono obbligatori"
+                message: "Username, email, and password are required"
             });
         }
 
@@ -1899,7 +1899,7 @@ app.post("/api/users", authenticateToken, requireAdmin, async (req, res) => {
 
         if (existing.length > 0) {
             return res.status(409).json({
-                message: "Username o email già utilizzati"
+                message: "Username or email is already in use"
             });
         }
 
@@ -1935,16 +1935,16 @@ app.post("/api/users", authenticateToken, requireAdmin, async (req, res) => {
         ]);
 
         return res.status(201).json({
-            message: "Utente creato correttamente",
+            message: "User created successfully",
             id: Number(result.insertId)
         });
 
     } catch (error) {
 
-        console.error("Errore creazione utente:", error);
+        console.error("Error creating user:", error);
 
         return res.status(500).json({
-            message: "Errore durante la creazione dell'utente"
+            message: "Failed to create the user"
         });
 
     } finally {
@@ -1976,7 +1976,7 @@ app.put("/api/users/:id", authenticateToken, requireAdmin, async (req, res) => {
 
         if (!username || !email) {
             return res.status(400).json({
-                message: "Username e email sono obbligatori"
+                message: "Username and email are required"
             });
         }
 
@@ -1992,7 +1992,7 @@ app.put("/api/users/:id", authenticateToken, requireAdmin, async (req, res) => {
 
         if (users.length === 0) {
             return res.status(404).json({
-                message: "Utente non trovato"
+                message: "User not found"
             });
         }
 
@@ -2013,7 +2013,7 @@ app.put("/api/users/:id", authenticateToken, requireAdmin, async (req, res) => {
 
         if (existing.length > 0) {
             return res.status(409).json({
-                message: "Username o email già utilizzati"
+                message: "Username or email is already in use"
             });
         }
 
@@ -2063,15 +2063,15 @@ app.put("/api/users/:id", authenticateToken, requireAdmin, async (req, res) => {
 
 
         return res.json({
-            message: "Utente modificato correttamente"
+            message: "User updated successfully"
         });
 
     } catch (error) {
 
-        console.error("Errore modifica utente:", error);
+        console.error("Error updating user:", error);
 
         return res.status(500).json({
-            message: "Errore durante la modifica dell'utente"
+            message: "Failed to update the user"
         });
 
     } finally {
@@ -2102,7 +2102,7 @@ app.delete("/api/users/:id", authenticateToken, requireAdmin, async (req, res) =
 
         if (rows.length === 0) {
             return res.status(404).json({
-                message: "Utente non trovato"
+                message: "User not found"
             });
         }
 
@@ -2112,19 +2112,19 @@ app.delete("/api/users/:id", authenticateToken, requireAdmin, async (req, res) =
         `, [id]);
 
         return res.json({
-            message: "Utente eliminato correttamente"
+            message: "User deleted successfully"
         });
 
     } catch (error) {
 
         console.error(
-            "Errore eliminazione utente:",
+            "Error deleting user:",
             error
         );
 
         return res.status(500).json({
             message:
-                "Errore durante l'eliminazione dell'utente"
+                "Failed to delete the user"
         });
 
     } finally {
@@ -2162,7 +2162,7 @@ app.post("/api/users/:id/copy", authenticateToken, requireAdmin, async (req, res
 
         if (rows.length === 0) {
             return res.status(404).json({
-                message: "Utente non trovato"
+                message: "User not found"
             });
         }
 
@@ -2230,7 +2230,7 @@ app.post("/api/users/:id/copy", authenticateToken, requireAdmin, async (req, res
         ]);
 
         return res.status(201).json({
-            message: "Utente duplicato correttamente",
+            message: "User duplicated successfully",
             id: newId,
             username: newUsername,
             temporaryPassword
@@ -2239,13 +2239,13 @@ app.post("/api/users/:id/copy", authenticateToken, requireAdmin, async (req, res
     } catch (error) {
 
         console.error(
-            "Errore duplicazione utente:",
+            "Error duplicating user:",
             error
         );
 
         return res.status(500).json({
             message:
-                "Errore durante la duplicazione dell'utente"
+                "Failed to duplicate the user"
         });
 
     } finally {
@@ -2279,15 +2279,15 @@ app.get("/api/services", authenticateToken, async (req, res) => {
             FROM services s
             ORDER BY id DESC
         `);
-        console.log("Servizi caricati:", rows.length);
+        console.log("Services loaded:", rows.length);
         return res.json(rows);
 
     } catch (error) {
 
-        console.error("Errore caricamento services:", error);
+        console.error("Error loading services:", error);
 
         return res.status(500).json({
-            message: "Errore durante il caricamento dei servizi"
+            message: "Failed to load services"
         });
 
     } finally {
@@ -2320,7 +2320,7 @@ app.put("/api/services/:id", authenticateToken,async (req, res) => {
 
         if (typeof name !== "string" || !name.trim()) {
             return res.status(400).json({
-                message: "Il nome del servizio è obbligatorio"
+                message: "Service name is required"
             });
         }
 
@@ -2335,7 +2335,7 @@ app.put("/api/services/:id", authenticateToken,async (req, res) => {
 
         if (rows.length === 0) {
             return res.status(404).json({
-                message: "Servizio non trovato"
+                message: "Service not found"
             });
         }
 
@@ -2364,15 +2364,15 @@ app.put("/api/services/:id", authenticateToken,async (req, res) => {
         ]);
 
         return res.json({
-            message: "Servizio modificato correttamente"
+            message: "Service updated successfully"
         });
 
     } catch (error) {
 
-        console.error("Errore modifica servizio:", error);
+        console.error("Error updating service:", error);
 
         return res.status(500).json({
-            message: "Errore durante la modifica del servizio"
+            message: "Failed to update the service"
         });
 
     } finally {
@@ -2412,7 +2412,7 @@ app.get("/api/services/:id",authenticateToken, async (req, res) => {
 
         if (rows.length === 0) {
             return res.status(404).json({
-                message: "Service non trovato"
+                message: "Service not found"
             });
         }
 
@@ -2420,10 +2420,10 @@ app.get("/api/services/:id",authenticateToken, async (req, res) => {
 
     } catch (error) {
 
-        console.error("Errore caricamento service:", error);
+        console.error("Error loading service:", error);
 
         return res.status(500).json({
-            message: "Errore durante il caricamento del servizio"
+            message: "Failed to load the service"
         });
 
     } finally {
@@ -2454,7 +2454,7 @@ app.post("/api/services", authenticateToken, async (req, res) => {
 
         if (!name) {
             return res.status(400).json({
-                message: "Il nome del servizio è obbligatorio"
+                message: "Service name is required"
             });
         }
 
@@ -2535,7 +2535,7 @@ app.post("/api/services", authenticateToken, async (req, res) => {
 
             return res.status(409).json({
                 message:
-                    `Il codice servizio ${nuovoCodice} esiste già`
+                    `Service code ${nuovoCodice} already exists`
             });
         }
 
@@ -2558,7 +2558,7 @@ app.post("/api/services", authenticateToken, async (req, res) => {
         return res.status(201).json({
 
             message:
-                "Service creato correttamente",
+                "Service created successfully",
 
             id: newId
         });
@@ -2567,13 +2567,13 @@ app.post("/api/services", authenticateToken, async (req, res) => {
     } catch (error) {
 
         console.error(
-            "Errore creazione prodotto:",
+            "Error creating product:",
             error
         );
 
         return res.status(500).json({
             message:
-                "Errore durante la creazione del prodotto"
+                "Failed to create the product"
         });
 
     } finally {
@@ -2612,7 +2612,7 @@ app.post("/api/services/:id/copy", authenticateToken, requireAdmin, async (req, 
 
         if (rows.length === 0) {
             return res.status(404).json({
-                message: "Servizio non trovato"
+                message: "Service not found"
             });
         }
 
@@ -2646,20 +2646,20 @@ app.post("/api/services/:id/copy", authenticateToken, requireAdmin, async (req, 
         const newId = Number(result.insertId);
 
         return res.status(201).json({
-            message: "Servizio duplicato correttamente",
+            message: "Service duplicated successfully",
             id: newId
         });
 
     } catch (error) {
 
         console.error(
-            "Errore duplicazione servizio:",
+            "Error duplicating service:",
             error
         );
 
         return res.status(500).json({
             message:
-                "Errore durante la duplicazione del servizio"
+                "Failed to duplicate the service"
         });
 
     } finally {
@@ -2689,7 +2689,7 @@ app.delete("/api/services/:id",authenticateToken, requireAdmin, async (req, res)
 
         if (rows.length === 0) {
             return res.status(404).json({
-                message: "Servizio non trovato"
+                message: "Service not found"
             });
         }
 
@@ -2699,19 +2699,19 @@ app.delete("/api/services/:id",authenticateToken, requireAdmin, async (req, res)
         `, [id]);
 
         return res.json({
-            message: "Servizio eliminato correttamente"
+            message: "Service deleted successfully"
         });
 
     } catch (error) {
 
         console.error(
-            "Errore eliminazione servizio:",
+            "Error deleting service:",
             error
         );
 
         return res.status(500).json({
             message:
-                "Errore durante l'eliminazione del servizio"
+                "Failed to delete the service"
         });
 
     } finally {
@@ -2728,7 +2728,7 @@ app.post("/api/services/upload", authenticateToken,
 
         if (!req.file) {
             return res.status(400).json({
-                message: "Nessuna immagine ricevuta"
+                message: "No image received"
             });
         }
 
@@ -2757,7 +2757,7 @@ app.put("/api/products/:id", authenticateToken,async (req, res) => {
 
         if (!nome) {
             return res.status(400).json({
-                message: "Il nome del prodotto è obbligatorio"
+                message: "Product name is required"
             });
         }
 
@@ -2772,7 +2772,7 @@ app.put("/api/products/:id", authenticateToken,async (req, res) => {
 
         if (rows.length === 0) {
             return res.status(404).json({
-                message: "Prodotto non trovato"
+                message: "Product not found"
             });
         }
 
@@ -2795,15 +2795,15 @@ app.put("/api/products/:id", authenticateToken,async (req, res) => {
         ]);
 
         return res.json({
-            message: "Prodotto modificato correttamente"
+            message: "Product updated successfully"
         });
 
     } catch (error) {
 
-        console.error("Errore modifica prodotto:", error);
+        console.error("Error updating product:", error);
 
         return res.status(500).json({
-            message: "Errore durante la modifica del prodotto"
+            message: "Failed to update the product"
         });
 
     } finally {
@@ -2833,15 +2833,15 @@ app.get("/api/products", authenticateToken, async (req, res) => {
             FROM products p
             ORDER BY id DESC
         `);
-        console.log("Prodotti caricati:", rows.length);
+        console.log("Products loaded:", rows.length);
         return res.json(rows);
 
     } catch (error) {
 
-        console.error("Errore caricamento prodotti:", error);
+        console.error("Error loading products:", error);
 
         return res.status(500).json({
-            message: "Errore durante il caricamento dei prodotti"
+            message: "Failed to load products"
         });
 
     } finally {
@@ -2868,7 +2868,7 @@ app.post("/api/products", authenticateToken, async (req, res) => {
 
         if (!nome) {
             return res.status(400).json({
-                message: "Il nome del prodotto è obbligatorio"
+                message: "Product name is required"
             });
         }
 
@@ -2940,7 +2940,7 @@ app.post("/api/products", authenticateToken, async (req, res) => {
 
             return res.status(409).json({
                 message:
-                    `Il codice prodotto ${nuovoCodice} esiste già`
+                    `Product code ${nuovoCodice} already exists`
             });
         }
 
@@ -2962,7 +2962,7 @@ app.post("/api/products", authenticateToken, async (req, res) => {
         return res.status(201).json({
 
             message:
-                "Prodotto creato correttamente",
+                "Product created successfully",
 
             id: newId,
 
@@ -2973,13 +2973,13 @@ app.post("/api/products", authenticateToken, async (req, res) => {
     } catch (error) {
 
         console.error(
-            "Errore creazione prodotto:",
+            "Error creating product:",
             error
         );
 
         return res.status(500).json({
             message:
-                "Errore durante la creazione del prodotto"
+                "Failed to create the product"
         });
 
     } finally {
@@ -3014,7 +3014,7 @@ app.get("/api/products/:id",authenticateToken, async (req, res) => {
 
         if (rows.length === 0) {
             return res.status(404).json({
-                message: "Prodotto non trovato"
+                message: "Product not found"
             });
         }
 
@@ -3022,10 +3022,10 @@ app.get("/api/products/:id",authenticateToken, async (req, res) => {
 
     } catch (error) {
 
-        console.error("Errore caricamento prodotto:", error);
+        console.error("Error loading product:", error);
 
         return res.status(500).json({
-            message: "Errore durante il caricamento del prodotto"
+            message: "Failed to load the product"
         });
 
     } finally {
@@ -3055,7 +3055,7 @@ app.delete("/api/products/:id",authenticateToken, requireAdmin, async (req, res)
 
         if (rows.length === 0) {
             return res.status(404).json({
-                message: "Prodotto non trovato"
+                message: "Product not found"
             });
         }
 
@@ -3065,19 +3065,19 @@ app.delete("/api/products/:id",authenticateToken, requireAdmin, async (req, res)
         `, [id]);
 
         return res.json({
-            message: "Prodotto eliminato correttamente"
+            message: "Product deleted successfully"
         });
 
     } catch (error) {
 
         console.error(
-            "Errore eliminazione prodotto:",
+            "Error deleting product:",
             error
         );
 
         return res.status(500).json({
             message:
-                "Errore durante l'eliminazione del prodotto"
+                "Failed to delete the product"
         });
 
     } finally {
@@ -3095,7 +3095,7 @@ app.post("/api/products/upload", authenticateToken,
 
         if (!req.file) {
             return res.status(400).json({
-                message: "Nessuna immagine ricevuta"
+                message: "No image received"
             });
         }
 
@@ -3130,13 +3130,13 @@ app.get("/api/payment-methods", authenticateToken, async (req, res) => {
         } catch (error) {
 
             console.error(
-                "Errore caricamento metodi di pagamento:",
+                "Error loading payment methods:",
                 error
             );
 
             res.status(500).json({
                 message:
-                    "Errore durante il caricamento dei metodi di pagamento"
+                    "Failed to load payment methods"
             });
 
         } finally {
@@ -3165,7 +3165,7 @@ app.post(
 
             if (!code || !name) {
                 return res.status(400).json({
-                    message: "Codice e descrizione sono obbligatori"
+                    message: "Code and description are required"
                 });
             }
 
@@ -3181,7 +3181,7 @@ app.post(
 
             if (existing.length > 0) {
                 return res.status(409).json({
-                    message: "Esiste già un metodo di pagamento con questo codice"
+                    message: "A payment method with this code already exists"
                 });
             }
 
@@ -3202,19 +3202,19 @@ app.post(
             ]);
 
             return res.status(201).json({
-                message: "Metodo di pagamento creato correttamente",
+                message: "Payment method created successfully",
                 id: Number(result.insertId)
             });
 
         } catch (error) {
 
             console.error(
-                "Errore creazione metodo di pagamento:",
+                "Error creating payment method:",
                 error
             );
 
             return res.status(500).json({
-                message: "Errore durante la creazione del metodo di pagamento"
+                message: "Failed to create the payment method"
             });
 
         } finally {
@@ -3250,7 +3250,7 @@ app.get("/api/payment-methods/:id", authenticateToken, requireAdmin, async (req,
 
             if (rows.length === 0) {
                 return res.status(404).json({
-                    message: "Metodo di pagamento non trovato"
+                    message: "Payment method not found"
                 });
             }
 
@@ -3259,13 +3259,13 @@ app.get("/api/payment-methods/:id", authenticateToken, requireAdmin, async (req,
         } catch (error) {
 
             console.error(
-                "Errore caricamento metodo di pagamento:",
+                "Error loading payment method:",
                 error
             );
 
             return res.status(500).json({
                 message:
-                    "Errore durante il caricamento del metodo di pagamento"
+                    "Failed to load the payment method"
             });
 
         } finally {
@@ -3298,7 +3298,7 @@ app.put(
 
             if (!code || !name) {
                 return res.status(400).json({
-                    message: "Codice e descrizione sono obbligatori"
+                    message: "Code and description are required"
                 });
             }
 
@@ -3314,7 +3314,7 @@ app.put(
 
             if (existingPayment.length === 0) {
                 return res.status(404).json({
-                    message: "Metodo di pagamento non trovato"
+                    message: "Payment method not found"
                 });
             }
 
@@ -3333,7 +3333,7 @@ app.put(
             if (duplicateCode.length > 0) {
                 return res.status(409).json({
                     message:
-                        "Esiste già un metodo di pagamento con questo codice"
+                        "A payment method with this code already exists"
                 });
             }
 
@@ -3355,19 +3355,19 @@ app.put(
 
             return res.json({
                 message:
-                    "Metodo di pagamento modificato correttamente"
+                    "Payment method updated successfully"
             });
 
         } catch (error) {
 
             console.error(
-                "Errore modifica metodo di pagamento:",
+                "Error updating payment method:",
                 error
             );
 
             return res.status(500).json({
                 message:
-                    "Errore durante la modifica del metodo di pagamento"
+                    "Failed to update the payment method"
             });
 
         } finally {
@@ -3399,7 +3399,7 @@ app.delete(
 
             if (existing.length === 0) {
                 return res.status(404).json({
-                    message: "Metodo di pagamento non trovato"
+                    message: "Payment method not found"
                 });
             }
 
@@ -3409,19 +3409,19 @@ app.delete(
             `, [id]);
 
             return res.json({
-                message: "Metodo di pagamento eliminato correttamente"
+                message: "Payment method deleted successfully"
             });
 
         } catch (error) {
 
             console.error(
-                "Errore eliminazione metodo di pagamento:",
+                "Error deleting payment method:",
                 error
             );
 
             return res.status(500).json({
                 message:
-                    "Errore durante l'eliminazione del metodo di pagamento"
+                    "Failed to delete the payment method"
             });
 
         } finally {
