@@ -497,6 +497,23 @@ async function duplicateService(service: Service) {
 
             <th
               class="sortable"
+              @click="sortBy('immagine')"
+            >
+              Image
+
+              <span
+                v-if="sortKey === 'immagine'"
+              >
+                {{
+                  sortDirection === 'asc'
+                    ? '↑'
+                    : '↓'
+                }}
+              </span>
+            </th>
+
+            <th
+              class="sortable"
               @click="sortBy('time_type')"
             >
               Time Type
@@ -603,6 +620,25 @@ async function duplicateService(service: Service) {
 
             <td>
               {{ service.name || '—' }}
+            </td>
+
+            <td>
+              <button
+                v-if="service.immagine"
+                type="button"
+                class="thumbnail-button"
+                :aria-label="`Enlarge image: ${service.name}`"
+                aria-haspopup="dialog"
+                @click="openImage(service)"
+              >
+                <img
+                  :src="service.immagine"
+                  :alt="service.name || 'Service image'"
+                  class="service-thumbnail"
+                  loading="lazy"
+                />
+              </button>
+              <span v-else>—</span>
             </td>
 
             <td>
