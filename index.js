@@ -2267,6 +2267,7 @@ app.get("/api/services", authenticateToken, async (req, res) => {
         const rows = await conn.query(`
             SELECT
                 s.id,
+                s.codice,
                 s.name,
                 s.time_type,
                 s.time_unit,
@@ -2395,6 +2396,7 @@ app.get("/api/services/:id",authenticateToken, async (req, res) => {
         const rows = await conn.query(`
             SELECT
                 s.id,
+                s.codice,
                 s.name,
                 s.description,
                 s.time_type,
@@ -2421,7 +2423,7 @@ app.get("/api/services/:id",authenticateToken, async (req, res) => {
         console.error("Errore caricamento service:", error);
 
         return res.status(500).json({
-            message: "Errore durante il caricamento del prodotto"
+            message: "Errore durante il caricamento del servizio"
         });
 
     } finally {
@@ -2435,6 +2437,7 @@ app.get("/api/services/:id",authenticateToken, async (req, res) => {
 app.post("/api/services", authenticateToken, async (req, res) => {
 
     const {
+        codice,
         name,
         description,
         immagine,
@@ -2457,9 +2460,18 @@ app.post("/api/services", authenticateToken, async (req, res) => {
 
         conn = await db.getConnection();
 
+        /*
+         * Codice temporaneo univoco.
+         * Ci serve perché codice è NOT NULL e UNIQUE,
+         * ma non conosciamo ancora l'ID AUTO_INCREMENT.
+         */
+        const codiceProvvisorio =
+            `TMP-${Date.now()}`;
+
         const result = await conn.query(`
             INSERT INTO services
             (
+            codice,
             name,
             description,
             time_type,
@@ -2469,8 +2481,9 @@ app.post("/api/services", authenticateToken, async (req, res) => {
             immagine,
             active
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         `, [
+            codiceProvvisorio,
             name,
             description || null,
             time_type || 0,
@@ -2485,6 +2498,62 @@ app.post("/api/services", authenticateToken, async (req, res) => {
          * ID generato da MariaDB
          */
         const newId = Number(result.insertId);
+
+
+        /*
+         * Creo il codice prodotto
+         *
+         * 1   -> SVR001
+         * 12  -> SVR012
+         * 123 -> SVR123
+         */
+        const nuovoCodice =
+            "SVR" + String(newId).padStart(3, "0");
+
+
+        /*
+         * Controllo che non esista già
+         */
+        const existing = await conn.query(`
+            SELECT id
+            FROM services
+            WHERE codice = ?
+              AND id <> ?
+            LIMIT 1
+        `, [
+            nuovoCodice,
+            newId
+        ]);
+
+        if (existing.length > 0) {
+
+            // Elimino il record appena inserito
+            await conn.query(
+                "DELETE FROM services WHERE id = ?",
+                [newId]
+            );
+
+            return res.status(409).json({
+                message:
+                    `Il codice servizio ${nuovoCodice} esiste già`
+            });
+        }
+
+
+        /*
+         * Sostituisco il codice temporaneo
+         * con quello definitivo.
+         */
+        await conn.query(`
+            UPDATE services
+            SET codice = ?
+            WHERE id = ?
+        `, [
+            nuovoCodice,
+            newId
+        ]);
+
+
 
         return res.status(201).json({
 

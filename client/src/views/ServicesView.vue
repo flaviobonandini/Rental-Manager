@@ -5,7 +5,8 @@ import { authFetch } from '../utils/authFetch'
 
 interface Service {
   id: number
-  name: string | null
+  codice: string 
+  name: string 
   time_type: number
   time_unit: number
   description: string | null
@@ -476,6 +477,20 @@ async function duplicateService(service: Service) {
               </span>
             </th>
 
+            <th
+              class="sortable"
+              @click="sortBy('codice')"
+            >
+              codice
+
+              <span v-if="sortKey === 'codice'">
+                {{
+                  sortDirection === 'asc'
+                    ? '↑'
+                    : '↓'
+                }}
+              </span>
+            </th>
 
             <th
               class="sortable"
@@ -616,6 +631,10 @@ async function duplicateService(service: Service) {
 
             <td>
               {{ service.id }}
+            </td>
+
+            <td>
+              {{ service.codice || '—' }}
             </td>
 
             <td>

@@ -7,6 +7,7 @@ import { authFetch } from '../utils/authFetch'
 
 interface ServiceForm {
   name: string
+  codice: string
   description: string
   time_unit: number
   price: number
@@ -38,6 +39,7 @@ let notificationTimer: ReturnType<typeof setTimeout> | null = null
 
 const service = ref<ServiceForm>({
     name: '',
+    codice: '',
     description: '',
     time_unit: 1,
     price: 0,
@@ -213,6 +215,7 @@ async function saveService() {
 
     const payload = {
         name: service.value.name,
+        cosdice: service.value.codice,
         description: service.value.description,
         time_unit: Number(service.value.time_unit),
         price: Number(service.value.price),
@@ -325,11 +328,11 @@ onUnmounted(() => {
         <h1>{{ pageTitle() }}</h1>
 
         <p v-if="isEdit || isView">
-          Service id : {{ service.name }}
+          Service code : {{ service.codice || '—' }}
         </p>
 
         <p v-else>
-          The Service code is generated automatically in the format PRDXXX
+          The Service code is generated automatically in the format SRVXXX
         </p>
       </div>
 
@@ -374,22 +377,19 @@ onUnmounted(() => {
             />
           </div>
 
-          <div class="form-group">
-            <label>Status</label>
+         <div class="form-group">
+            <label>Service Price *</label>
 
-            <select
-              v-model.number="service.active"
+            <input
+              v-model="service.price"
+              class="price-input"
+              type="number"
+              step="0.01"
               :disabled="isView"
-            >
-              <option :value="1">
-                Active
-              </option>
-
-              <option :value="0">
-                Disabled
-              </option>
-            </select>
+            />
           </div>
+          
+
 
         </div>
         <br>
@@ -440,16 +440,23 @@ onUnmounted(() => {
 
 
           <div class="form-group">
-            <label>Service Price *</label>
+            <label>Status</label>
 
-            <input
-              v-model="service.price"
-              class="price-input"
-              type="number"
-              step="0.01"
+            <select
+              v-model.number="service.active"
               :disabled="isView"
-            />
+            >
+              <option :value="1">
+                Active
+              </option>
+
+              <option :value="0">
+                Disabled
+              </option>
+            </select>
           </div>
+
+
         </div>
 
         <div class="form-group description">
