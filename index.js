@@ -2748,6 +2748,7 @@ app.put("/api/products/:id", authenticateToken,async (req, res) => {
         codice,
         descrizione,
         immagine,
+        price,
         active
     } = req.body;
 
@@ -2783,6 +2784,7 @@ app.put("/api/products/:id", authenticateToken,async (req, res) => {
                 codice = ?,
                 descrizione = ?,
                 immagine = ?,
+                price = ?,
                 active = ?
             WHERE id = ?
         `, [
@@ -2790,6 +2792,7 @@ app.put("/api/products/:id", authenticateToken,async (req, res) => {
             codice,
             descrizione || null,
             immagine || null,
+            price || 0,
             Number(active) === 0 ? 0 : 1,
             id
         ]);
@@ -2829,6 +2832,7 @@ app.get("/api/products", authenticateToken, async (req, res) => {
                 p.nome,
                 p.descrizione,
                 p.immagine,
+                p.price,
                 p.active
             FROM products p
             ORDER BY id DESC
@@ -2859,6 +2863,7 @@ app.post("/api/products", authenticateToken, async (req, res) => {
         codice,
         descrizione,
         immagine,
+        price,
         active
     } = req.body;
 
@@ -2889,14 +2894,16 @@ app.post("/api/products", authenticateToken, async (req, res) => {
             codice,
             descrizione,
             immagine,
+            price,
             active
             )
-            VALUES (?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?)
         `, [
             nome,
             codiceProvvisorio,
             descrizione || null,
             immagine || null,
+            price || 0,
             Number(active) === 0 ? 0 : 1
         ]);
 
@@ -3006,6 +3013,7 @@ app.get("/api/products/:id",authenticateToken, async (req, res) => {
                 p.nome,
                 p.descrizione,
                 p.immagine,
+                price,
                 p.active
             FROM products p
             WHERE p.id = ?

@@ -10,6 +10,7 @@ interface ProductForm {
   nome: string
   descrizione: string
   immagine: string
+  price: number
   active: number
 }
 
@@ -38,7 +39,8 @@ const product = ref<ProductForm>({
   nome: '',
   descrizione: '',
   active: 1,
-  immagine: ''
+  immagine: '',
+  price: 0,
 })
 
 const editor = useEditor({
@@ -211,6 +213,7 @@ async function saveProduct() {
       descrizione: product.value.descrizione,
       active: Number(product.value.active),
       immagine: product.value.immagine,
+      price: Number(product.value.price) || 0,
     }
 
     const url = isEdit.value
@@ -382,6 +385,17 @@ onUnmounted(() => {
             </select>
           </div>
 
+          <div class="form-group">
+            <label>Price</label>
+
+            <input
+              v-model.number="product.price"
+              type="number"
+              min="0"
+              step="1.00"
+              :disabled="isView"
+            />
+          </div>
         </div>
 
 

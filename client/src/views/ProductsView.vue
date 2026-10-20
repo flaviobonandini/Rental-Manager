@@ -9,6 +9,7 @@ interface Product {
   nome: string | null
   descrizione: string | null
   immagine: string | null
+  price: number | 0
   active: number
 }
 
@@ -529,6 +530,27 @@ async function duplicateProduct(product: Product) {
               </span>
             </th>
 
+
+            <th
+              class="sortable"
+              @click="sortBy('price')"
+            >
+              PRICE
+
+              <span
+                v-if="sortKey === 'price'"
+              >
+                {{
+                  sortDirection === 'asc'
+                    ? '↑'
+                    : '↓'
+                }}
+              </span>
+            </th>
+
+
+
+
             <th
               class="sortable"
               @click="sortBy('active')"
@@ -595,7 +617,9 @@ async function duplicateProduct(product: Product) {
               <span v-else>—</span>
             </td>
 
-
+            <td>
+              {{ product.price || '0.00' }}
+            </td>
             <td>
 
               <span
