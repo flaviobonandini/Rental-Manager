@@ -73,7 +73,7 @@ const rental = ref<RentalForm>({
   rental_number: '',
   rental_start_date: '',
   rental_stop_date: '',
-  status: 'DRAFT',
+  status: 'REQUEST',
   notes: '',
 })
 
@@ -447,11 +447,9 @@ onMounted(loadRental)
           <label class="form-group">
             <span>Status</span>
             <select v-model="rental.status" required :disabled="isView || isNew">
-              <option value="DRAFT">DRAFT</option>
+              <option value="REQUEST">REQUEST</option>
               <option value="CONFIRMED">CONFIRMED</option>
-              <option value="ACTIVE">ACTIVE</option>
-              <option value="COMPLETED">COMPLETED</option>
-              <option value="CANCELLED">CANCELLED</option>
+              <option value="REJECTED">REJECTED</option>
             </select>
           </label>
 

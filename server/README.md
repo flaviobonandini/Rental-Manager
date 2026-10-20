@@ -26,7 +26,7 @@ Tutti gli utenti autenticati possono creare una prenotazione con
 `POST /api/rentals`. Gli amministratori specificano il proprietario; per gli
 altri utenti il proprietario è sempre ricavato dall'identità del token.
 Il server assegna il numero nel formato `RTS-DDMMYY-XXXX`, con progressivo
-giornaliero a quattro cifre, e crea la prenotazione in stato `DRAFT`.
+giornaliero a quattro cifre, e crea la prenotazione in stato `REQUEST`.
 
 La creazione avviene in due fasi: prima si seleziona il servizio, poi si
 sceglie un'ora libera dalla griglia settimanale. Gli slot durano un'ora e

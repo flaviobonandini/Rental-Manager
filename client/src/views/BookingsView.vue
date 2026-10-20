@@ -184,13 +184,13 @@ function formatDate(value: string | null) {
 
 function statusClass(status: string) {
   const normalized = status.toUpperCase()
-  if (['CONFIRMED', 'ACTIVE', 'COMPLETED'].includes(normalized)) {
+  if (['CONFIRMED'].includes(normalized)) {
     return 'positive'
   }
-  if (['CANCELLED', 'CANCELED', 'REJECTED'].includes(normalized)) {
+  if (['REJECTED'].includes(normalized)) {
     return 'negative'
   }
-  if (['DRAFT', 'PENDING', 'IN_PROGRESS'].includes(normalized)) {
+  if (['REQUEST'].includes(normalized)) {
     return 'pending'
   }
   return 'neutral'

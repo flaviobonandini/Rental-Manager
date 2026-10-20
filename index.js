@@ -176,7 +176,7 @@ async function hasConflictingRental(conn, startDate, stopDate, excludeId = null)
         FROM rental_service
         WHERE rental_start_date < ?
           AND rental_stop_date > ?
-          AND UPPER(status) NOT IN ('CANCELLED', 'CANCELED', 'ANNULLATA', 'REJECTED')
+          AND UPPER(status) NOT IN ('REJECTED')
           AND (? IS NULL OR id <> ?)
         LIMIT 1
     `, [
@@ -202,7 +202,7 @@ async function hasConflictingProductRental(conn, productId, startDate, stopDate,
         WHERE produc_id = ?
           AND rental_start_date < ?
           AND rental_stop_date > ?
-          AND UPPER(status) NOT IN ('CANCELLED', 'CANCELED', 'ANNULLATA', 'REJECTED')
+          AND UPPER(status) NOT IN ('REJECTED')
           AND (? IS NULL OR id <> ?)
         LIMIT 1
     `, [productId, stopDate, startDate, excludeId, excludeId]);
@@ -627,7 +627,7 @@ app.get("/api/rental-availability", authenticateToken, async (req, res) => {
             FROM rental_service
             WHERE rental_start_date < ?
               AND rental_stop_date > ?
-              AND UPPER(status) NOT IN ('CANCELLED', 'CANCELED', 'ANNULLATA', 'REJECTED')
+              AND UPPER(status) NOT IN ('REJECTED')
               AND (? IS NULL OR id <> ?)
             ORDER BY rental_start_date
         `, [
@@ -772,7 +772,7 @@ app.post("/api/rentals", authenticateToken, async (req, res) => {
                         status,
                         notes
                     )
-                    VALUES (?, ?, ?, ?, ?, 'DRAFT', ?)
+                    VALUES (?, ?, ?, ?, ?, 'REQUEST', ?)
                 `, [
                     serviceId,
                     ownerId,
@@ -1039,7 +1039,7 @@ app.post("/api/rentals/:id/copy", authenticateToken, requireAdmin, async (req, r
                             status,
                             notes
                         )
-                        VALUES (?, ?, ?, ?, ?, 'DRAFT', ?)
+                        VALUES (?, ?, ?, ?, ?, 'REQUEST', ?)
                     `, [
                         original.service_id,
                         original.user_owner_id,
@@ -1374,7 +1374,7 @@ app.post("/api/rental-products", authenticateToken, async (req, res) => {
                         status,
                         notes
                     )
-                    VALUES (?, ?, ?, ?, ?, 'DRAFT', ?)
+                    VALUES (?, ?, ?, ?, ?, 'REQUEST', ?)
                 `, [productId, ownerId, rentalNumber, startDate, stopDate, notes || null]);
 
                 return res.status(201).json({
@@ -1654,7 +1654,7 @@ app.get("/api/dashboard", authenticateToken, async (req, res) => {
                     DATE_FORMAT(CURDATE(), '%Y-%m-01'),
                     INTERVAL 1 MONTH
                 )
-              AND status <> 'CANCELLED'
+              AND status <> 'REJECTED'
               ${invoiceOwnerFilter}
             GROUP BY DATE_FORMAT(invoice_date, '%Y-%m')
             ORDER BY month
